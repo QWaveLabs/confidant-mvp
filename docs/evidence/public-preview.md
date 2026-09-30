@@ -1,4 +1,4 @@
-# Assisted preview package verification, 2026-09-30
+# v0.2.0-preview package verification, 2026-09-30
 
 The user approved an assisted local pilot today, with gaps visible, and public source publication. The new repository is https://github.com/QWaveLabs/confidant-mvp. GitHub's authenticated repository response confirmed public visibility and the new `main` branch. The old Confidant repository was not changed.
 
@@ -11,3 +11,5 @@ The private developer dashboard was successfully saved and retains whole-system 
 This release is suitable only for the approved assisted local trial on the person's own Mac and sources they explicitly permit. Original gates 01, 04 and every provider-specific result in 05 remain unresolved. Eligible bulk plan usage, interrupted high-volume unattended processing, cloud history/privacy, notification visibility, offline-Mac behavior, representative live source schemas/permissions and first-value quality/timing remain unverified. The installer must display these gaps and stop unsupported sources rather than substitute APIs, keys or manual exports.
 
 No live customer communications, provider connection, live send, deployment, marketplace submission or lasting Obsidian vault was used in this build. Existing schedules are unchanged; the separately authorized temporary synthetic feasibility task remains paused.
+
+Final publication receipt: `main` and the dereferenced annotated tag `v0.2.0-preview` both resolve remotely to `06b508d0eccb9c2829cb76fbb21621a72d5fe7c2`. The GitHub preview release is https://github.com/QWaveLabs/confidant-mvp/releases/tag/v0.2.0-preview. The API tree inventory confirms 89 source/documentation files, all 24 tickets, the install skill and no `.confidant/` data. The gate evaluator reports `ready: false`, no invalid completions, and all required gate families false. The checked public staging repository is `.confidant/share/public-source-v0.2.0`; never push the private development branch or its history to the public remote.

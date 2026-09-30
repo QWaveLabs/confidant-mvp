@@ -1,9 +1,9 @@
 {
   "name": "confidant-mvp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "Confidant assisted local setup and durable reporting. Live pilot release remains gated.",
+  "description": "Confidant assisted local setup with two daily Codex tasks and quiet background refresh. Live gates remain explicit.",
   "engines": {
     "node": ">=22.5"
   },

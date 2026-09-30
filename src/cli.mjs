@@ -7,6 +7,7 @@ import { ConfidantEngine, classifySynthetic } from './engine.mjs';
 import { ActionService } from './signals.mjs';
 import { createAssistedContext, defaultBrainDirectory } from './runtime.mjs';
 import { createReporter } from './reporting.mjs';
+import { CodexTaskInstallation } from './codex-tasks.mjs';
 
 export const SYNTHETIC_PROFILE = Object.freeze({ role: 'Fictional founder', goals: ['Follow through on sourced commitments'], people: ['Alex Example'], projects: ['Project Atlas'],
   categories: ['People', 'Projects', 'Commitments', 'Opportunities', 'Goals'], briefTime: '09:00', timezone: 'America/New_York', exclusions: { sources: [], people: ['Excluded Example'], chats: ['private-chat'], topics: ['private-family'] } });
@@ -92,13 +93,21 @@ function boundedFile(path) {
   return JSON.parse(text);
 }
 async function assistedMain() {
-  if (command === 'help') return print({ mode: 'assisted-local preview', commands: ['setup', 'answer', 'consent', 'import', 'plugin-page', 'batch', 'commit-batch', 'health', 'query', 'views', 'prep', 'brief', 'feedback', 'draft', 'pause', 'unpause', 'retry', 'disable', 'enable', 'export', 'delete'],
-    limits: 'Use only after the person has agreed to an assisted local preview and the separate source reads. No API, sends, schedule creation or automatic vault. Required live release gates remain unverified.' });
+  if (command === 'help') return print({ mode: 'assisted-local preview', commands: ['setup', 'answer', 'consent', 'import', 'plugin-page', 'batch', 'commit-batch', 'health', 'query', 'record', 'views', 'prep', 'brief', 'feedback', 'feedback-status', 'coaching', 'draft', 'tasks-configure', 'tasks-status', 'tasks-attempt', 'pause', 'unpause', 'retry', 'disable', 'enable', 'export', 'delete'],
+    limits: 'Use only after the person agreed to this assisted preview, named source reads and the Codex task bundle. The task helper reads/records owned settings; only Codex native automation tools install schedules. No API, sends, automatic dashboard or vault. Required live release gates remain unverified.' });
   if (['demo', 'resume', 'prepare-plan'].includes(command)) throw new Error('Fixture generation and deterministic classification are unavailable in assisted local mode.');
   const pluginPage = command === 'plugin-page' ? () => boundedFile(option('--file')) : undefined;
   const c = createAssistedContext(directory, { resetDeleted: command === 'setup' && args.includes('--new-brain'), pluginPage });
   try {
     if (command === 'setup') return print(c.engine.setup());
+    if (command.startsWith('tasks-')) {
+      const tasks = new CodexTaskInstallation(c.store, { codexHome: option('--codex-home') });
+      const automationIds = args.flatMap((value, index) => value === '--automation-id' ? [args[index + 1]] : []);
+      if (command === 'tasks-configure') return print(tasks.configure({ eveningTime: option('--evening-time'), appTimezone: option('--app-timezone'), approved: args.includes('--approve-codex-tasks') }));
+      if (command === 'tasks-status') return print(tasks.reconcile({ automationIds }));
+      if (command === 'tasks-attempt') return print(tasks.attempt(option('--task'), { automationIds }));
+      throw new Error('Unknown task-install helper command.');
+    }
     if (command === 'answer') {
       const key = option('--key'); const result = c.engine.answer(key, boundedFile(option('--file')).value);
       if (key === 'exclusions') try { await purgeOwnedReports(c.store); } catch { c.engine.pause(); throw new Error('Exclusions were saved and processing paused; owned report purge failed. Resolve the report storage issue before resuming.'); }
@@ -119,6 +128,14 @@ async function assistedMain() {
     if (command === 'views') return print(c.engine.views());
     if (command === 'prep') return print(c.engine.meetingPrep(option('--person', '')));
     if (command === 'brief') return print(c.actions.brief());
+    if (command === 'coaching') return print(c.actions.coaching());
+    if (command === 'feedback-status') {
+      const activeFacts = c.store.facts().filter(fact => c.store.source(fact.source)?.authorized && !c.store.source(fact.source)?.disabled);
+      return print({ feedback: c.store.rows('feedback').filter(item => item.factIds?.some(id => activeFacts.some(fact => fact.id === id)))
+        .sort((a, b) => b.at.localeCompare(a.at)).slice(0, 20).map(item => ({ type: item.type, at: item.at, review: item.review,
+          facts: activeFacts.filter(fact => item.factIds.includes(fact.id)).map(fact => ({ label: fact.label, citation: fact.sourceRef })) })),
+        limitation: 'Explicit saved feedback only. Done means the person marked it done, not independently observed completion.' });
+    }
     if (command === 'pause' || command === 'unpause') return print(c.engine.pause(command === 'pause'));
     if (['retry', 'disable', 'enable'].includes(command)) return print(c.engine[command](option('--source')) ?? { sourceConsentRequired: true });
     if (command === 'feedback') return print(c.actions.feedback(option('--id'), option('--type'), option('--correction', null)));

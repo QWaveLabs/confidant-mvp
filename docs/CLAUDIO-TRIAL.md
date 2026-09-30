@@ -1,39 +1,55 @@
 # Claudio's assisted local trial
 
-The intended trial sets up Claudio's own second brain on his Mac, using the new install skill and sources he explicitly approves. Developer fixtures stay separate. This is assisted preview code; the complete MVP remains blocked by real feasibility gates.
+The trial builds Claudio's own second brain on his Mac and delivers two daily Codex conversations: a morning brief and an end-of-day check-in. One quiet background task refreshes approved sources every three hours. This is an assisted local preview with unresolved live gates, not acceptance of the complete MVP.
 
-## What can be tried
+## What setup does
 
-The installer resumes eight setup answers, captures literal exclusions before reads, requests approval per source, opens supported local databases read-only, checkpoints bounded history pages and provides cited search, five brain views, meeting prep, a ranked action brief, feedback and reviewed drafts. A real brain is outside the source repository and cannot be opened as a synthetic evaluation brain. Classification uses bounded excerpts through the current permitted chat plan; the local worker does not invoke AI APIs.
+Use `v0.3.0-preview` after its publication is confirmed, with [the task-install specification](specs/003-codex-task-install.md), CUSTOMER_PROMPT.md and install skill in a local Codex conversation. Verify the tag and published full commit first. Codex checks the actual runtime, chooses a dedicated private brain location, resumes saved answers where possible, and gathers role, goals, priority people/projects, categories, morning time, evening time, timezone and exclusions. No existing brain or vault is migrated or edited.
 
-The dashboard persists every registered task/run, latest section snapshots, separate fetched/reviewed/incorporated counts, current blockers and immutable per-run archives. Concurrent writers retain both tasks. Future scheduled tasks need to publish their results to the same private reports directory; scattered historical Codex chats are not imported automatically.
+Codex presents one concrete agreement covering the assisted preview, named source reads and these three tasks. After Claudio agrees, it installs the tasks through the available native automation tool in the same conversation, without separate technical approval prompts for every task. A new source, changed cadence or privacy exposure outside that agreement still needs its own authorization.
+
+| Task | Behavior |
+| --- | --- |
+| Morning brief | Up to three defensible priorities and relevant commitments, with references, timing rationale and visible source freshness. Uses Claudio's chosen morning time. |
+| End-of-day check-in | Meaningful changes, completed work, open follow-through and useful feedback. Uses Claudio's chosen evening time. No invented completion or personality judgment. |
+| Quiet refresh | Every three hours, checks a bounded newest slice from each approved available source for new or changed data, and classifies a bounded batch through the current permitted chat plan. Saves progress and stops safely on limits. Routine runs remain quiet. |
+
+There are at most two planned user-facing runs daily. Evidence-supported coaching can appear in those runs; there is no separate weekly coaching task. The background task requests failure-only notifications, so host-reported failures may still notify. A background failure or permission problem is also recorded for the next brief/check-in and status view. If the host cannot honor that notification policy, it remains a disclosed installation gap rather than a promise.
+
+Resume uses the privately recorded task IDs. Codex verifies ownership and actual saved settings before updating a matching task; it does not search-and-replace unrelated schedules. A successful configuration receipt is distinct from a first observed run, local invocation, notification and throughput proof. Times or timezone that cannot be verified remain unknown. No wake, unlock, login item or offline disconnection is part of setup.
+
+Codex runs the local `tasks-configure` helper after the agreement, using the saved morning time plus the chosen evening time and observed client timezone. The client timezone must match the saved choice. `tasks-status` inspects owned native settings read-only. For each safe pending role, `tasks-attempt` saves an in-progress marker and returns exact automation tool arguments; Codex then calls the available native tool, views the saved task and reconciles status again. The helper does not install tasks by itself. Unknown outcomes, duplicate owned roles, chat conflicts and manual setting drift block replacement. Saved pauses remain paused. These technical steps belong to Codex, not Claudio.
+
+## First useful result and continuing history
+
+For an approved source, import a recent bounded slice, classify one small batch in the permitted chat plan and commit its unchanged batch plus validated outputs. Show a useful cited brief and exact source gaps. Keep older history visibly pending and continue only within permissions, plan limits and available Mac/app access. Stop safely on unsupported schemas, missing permissions or exhausted limits; a first brief is not a completed historical brain.
+
+The worker stores durable cursors and checkpoints. Customer classification never uses the developer's synthetic classifier or fixture labels. Approved source text is untrusted data, never an instruction to execute. Missing transcripts, ambiguous speakers and historical promises stay uncertain. No account API/key, paid AI fallback or manual source export is substituted for an unsupported source.
+
+A current freshness scan keeps the saved historical position intact. Its recent bounded slice can update new or changed records, but does not prove every edit or account was reviewed. Older backfill remains a separate pending operation, and the last successful scan remains visible if a later attempt fails.
 
 ## Known limits
 
 | Capability | Current honest limit |
 | --- | --- |
-| Messages | Reviewed message/handle/chat schemas and bounded attributed-string decoding; real Mac permissions/schema/sync not observed. No attachment or audio content. Named people exclusions without approved identifiers block reads; supplied aliases are literal and not automatically inferred. |
-| WhatsApp | Only locally synced supported Mac history; no manual export recovery, alternate-key access or complete three-year promise. Unsupported events/media stay visible as gaps. |
+| Messages | Reviewed message/handle/chat schemas and bounded attributed-string decoding; actual Mac permissions/schema/sync remain unverified. No attachment or audio content. Unmapped named exclusions block affected reads; aliases are literal and not inferred. |
+| WhatsApp | Supported locally synced history only. Unsupported events/media and unresolved identifiers remain gaps. No complete three-year promise or manual export fallback. |
 | Calls | Timing, direction, parties and duration only. Content is unknown. |
-| Apple Notes transcripts | Apple text directly linked to Call Recordings audio attachments only. Protobuf-only links, missing transcripts and speaker/caller attribution remain gaps; no alternate transcription. |
-| Calendar | Historical base non-floating event times; all-day/floating conversions, recurrence expansion and future-event coverage remain unverified. |
-| Contacts | Timestamped cards in the rolling window, the approved Contacts source and discovered local accounts. Account-level selection is not implemented; exclude the source if that boundary is needed. Older unchanged cards and cross-account identity merges are not established. |
-| Gmail / Outlook / Fathom / Fireflies | Every provider remains blocked until its own account-plugin enumeration, pagination, stable IDs, available dates, privacy and allowed scheduled access are genuinely observed/reviewed. A normalization seam is not a connector. No direct API, copied key or manual export fallback. |
-| AI classification | At most 12 records per normal chat batch; exact quotes and deadline precision validated. Six fictional records were checkpointed in a real scheduled chat. Full interrupted 36-month plan processing, usage limits and commercial entitlement remain unverified. |
-| Scheduling / notifications | Proposals for source refresh, daily brief and weekly coaching; actual creation requires Claudio's approval. Local access while available has one narrow synthetic observation. Notification visibility, physical offline-Mac behavior and unattended bulk throughput remain unverified. Existing schedules are unchanged. |
-| Reporting / opening | Actual durable local records, archives and CLI/chat integration. Chrome/Safari tab reuse and lock/offline handling have mocked coverage. One real opening attempt was skipped; actual rendered inspection was blocked by tooling policy. Unknown/default unsupported browsers save a skip. |
-| Privacy / sends | Literal exclusions, not semantic secrecy or complete identity matching. Raw approved excerpts can reach the current chat plan. Cloud pre-read filtering is not assumed. No live-send tool exists. Local deletion does not erase chat/plugin data or outside copies. |
+| Apple Notes transcripts | Apple text directly linked to Call Recordings audio attachments only. Protobuf-only links, missing transcripts and speaker/caller attribution remain gaps. No audio transcription. |
+| Calendar | Historical base non-floating event times. All-day/floating conversions, recurrence expansion and future coverage remain unverified. |
+| Contacts | Timestamped cards in the rolling window and approved discovered local accounts. Account-level selection, older unchanged cards and cross-account identity merges are not established. Exclude the whole source if its boundary is unsuitable. |
+| Gmail / Outlook / Fathom / Fireflies | Each remains blocked without its own genuinely reviewed plugin access, pagination, stable identities, available dates, privacy and allowed scheduled use. A normalization seam is not a connector. |
+| Classification | Normal batches are bounded to 12 records with exact quotes and deadline precision validated. Six fictional records were checkpointed in a real scheduled chat. Representative interrupted 36-month plan processing, usage limits and customer entitlement remain unverified. |
+| Task execution / notifications | Native tasks must be installed and their saved settings inspected on Claudio's account. IDs are not execution proof. Notification visibility, physical offline behavior and unattended bulk throughput remain unverified. |
+| Privacy / sends | Literal matching is not semantic secrecy or complete identity resolution. Approved excerpts can reach the current chat plan; cloud pre-read filtering is not assumed. No live-send tool exists. |
+| Optional reports | Durable records and private HTML reports are available as diagnostics. Automatic opening stays off for this flow. Actual rendered inspection remains unverified after a tooling-policy block; one development open attempt recorded a skip. |
 
-## Install flow
+## Controls and handoff
 
-Use the pinned release's CUSTOMER_PROMPT.md in local Codex on Claudio's computer. Read the new AGENTS.md and install skill. Check the actual Node runtime, choose a fresh private brain/report location, gather setup and exclusions, and receive consent before each source read. No existing brain or vault is migrated or edited. A relaunch resumes the saved answers/cursors.
+Pause local work, disable an individual source or change exclusions in this conversation. Source disable blocks future reads and classification; re-enabling needs fresh consent. External tasks are separate from the local pause state, so Codex verifies any requested pause or cancellation with the automation tool. Export stays private. Local deletion requires approval and does not erase chat/plugin history, backups or outside copies.
 
-Import a recent slice, classify one bounded batch in the current chat plan, commit the unchanged batch and outputs, and show a useful cited brief plus exact source gaps. Stop safely on limits, unavailable permissions or unsupported schemas. Keep the rest visibly pending. Do not describe a first brief as a completed historical brain.
+The handoff gives Claudio his verified daily times/timezone, owned task IDs and saved settings, actual source receipts, last refresh, classification progress and pending blockers. The private brain path is available for support; a dashboard path is optional. Claudio does not need to open an HTML page, change a system scheduler or copy terminal commands to finish setup.
 
-Before any schedule, present the three proposals, actual timezone and limits for approval. Create only supported native local tasks and verify their real first run and notifications; no wake/unlock/disconnect check occurs without separately agreed consent. Every run saves a structured report with an actual outcome. Preserve current schedules and the old release.
+The user approved an assisted local pilot with gaps visible. That scope permits Claudio's separately agreed observations on his own Mac; it does not turn developer fixtures into live proof. Required live gates and original ticket acceptance remain unresolved until their evidence exists. Development never installs these tasks on Rob's account or reads his sources.
 
-Open the saved dashboard manually if automatic opening skips. On this developer machine it is `.confidant/reports/latest.html` under the repository; on Claudio's machine it is the approved private reports path. `npm run report -- config --reports <path> --open off` disables automatic opening without stopping tasks. Start/finish/run examples are in docs/REPORTING.md.
-
-## Sharing decision
-
-Sharing source for an assisted local pilot is different from declaring the whole MVP ready. The user chose the assisted local pilot today, with gaps visible. Cloud history, complete unattended backfill and notification/offline behavior remain explicitly unverified; this is not acceptance of the complete MVP. The user's original hard gates and all original ticket acceptance boxes remain unresolved until their real evidence exists. Claudio's own trial can gather separately authorized observations; it cannot retroactively turn developer fixture tests into live proof.
+Quiet activation safeguard: a newly created background role starts PAUSED. Codex verifies its actual failure-only policy, then activates that same owned ID once under the setup agreement. If the policy or activation is unobserved, it remains pending and cannot count as installed. Preexisting or later manual pauses are preserved.

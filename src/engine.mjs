@@ -111,19 +111,22 @@ export class ConfidantEngine {
     if (this.store.get('paused', false)) return { state: 'paused', cursor: source.cursor };
     if (source.attempts >= 3 && source.failedStep && !refresh) return { state: 'blocked after bounded retries', cursor: source.cursor };
     if (source.exhausted && !refresh) return { state: 'already exhausted', cursor: source.cursor };
-    let page; const from = refresh ? windowStart(this.now()) : source.from; const to = refresh ? this.now() : source.to;
+    const attemptedAt = this.now();
+    let page; const from = refresh ? windowStart(attemptedAt) : source.from; const to = refresh ? attemptedAt : source.to;
     const stillAllowed = () => { const current = this.store.source(sourceId); return current?.authorized && !current.disabled && current.revision === source.revision && !this.store.get('profile', {}).exclusions?.sources?.includes(sourceId) && !this.store.get('paused', false); };
     const cancelled = () => ({ state: 'cancelled because source state changed', cursor: this.store.source(sourceId)?.cursor ?? null });
     const fail = failure => this.store.transaction(() => {
       if (!stillAllowed()) return cancelled();
-      this.store.saveSource({ ...source, status: failure.reason, failedStep: failure, attempts: source.attempts + 1 });
-      return { state: 'failed', failure, cursor: source.cursor };
+      this.store.saveSource(refresh ? { ...source, freshness: { status: 'not yet committed', ...source.freshness,
+        lastAttempt: { at: attemptedAt, from, to, status: 'failed', failure }, completeCoverage: false } }
+        : { ...source, status: failure.reason, failedStep: failure, attempts: source.attempts + 1 });
+      return { state: 'failed', failure, cursor: source.cursor, refresh };
     });
     try { page = await adapter.readPage({ cursor: refresh ? null : source.cursor, from, to, limit }); }
     catch (error) {
       return fail(safeSourceError(error));
     }
-    if (!page || !Array.isArray(page.items) || typeof page.exhausted !== 'boolean' || (!page.exhausted && (page.nextCursor === undefined || page.nextCursor === null || page.nextCursor === source.cursor))) {
+    if (!page || !Array.isArray(page.items) || typeof page.exhausted !== 'boolean' || (!page.exhausted && (typeof page.nextCursor !== 'string' || !page.nextCursor || (!refresh && page.nextCursor === source.cursor)))) {
       const failure = { code: 'malformed_page', reason: 'Malformed or nonadvancing source page', action: 'Retry the same saved page.' };
       return fail(failure);
     }
@@ -139,12 +142,23 @@ export class ConfidantEngine {
         else if (this.store.putRecord(record).changed) changed++;
       }
       if (interruptBeforeCommit) throw new Error('Synthetic interruption before page commit.');
-      source.oldest = [source.oldest, observedDates[0]].filter(Boolean).sort()[0] ?? null;
-      source.newest = [source.newest, observedDates.at(-1)].filter(Boolean).sort().at(-1) ?? null;
-      Object.assign(source, { connected: true, cursor: page.nextCursor ?? null, exhausted: page.exhausted, seen: source.seen + page.items.length,
-        lastRefresh: this.now(), status: page.exhausted ? 'available source pages committed' : 'history import in progress', failedStep: null, attempts: 0,
-        gaps: Array.from(new Map([...(source.gaps ?? []), ...(page.gaps ?? [])].map(gap => [hash(gap), gap])).values()) });
-      if (refresh) { source.from = from; source.to = to; }
+      const refreshedAt = this.now();
+      if (refresh) {
+        // A bounded current scan is independent of the historical backfill position.
+        // Its adapter cursor is intentionally not substituted for the saved history cursor.
+        source.freshness = { at: refreshedAt, from, to, status: page.exhausted ? 'bounded scan committed' : 'partial bounded scan committed',
+          lastAttempt: { at: attemptedAt, from, to, status: 'committed', failure: null },
+          fetched: page.items.length, changed, excluded: excludedCount, oldest: observedDates[0] ?? null, newest: observedDates.at(-1) ?? null,
+          pageExhausted: page.exhausted, completeCoverage: false, failedStep: null, gaps: page.gaps ?? [],
+          limitation: 'One newest-first page only; older edits, remaining pages and separate account databases may not be reviewed. Historical backfill remains separate.' };
+        Object.assign(source, { connected: true, lastRefresh: refreshedAt });
+      } else {
+        source.oldest = [source.oldest, observedDates[0]].filter(Boolean).sort()[0] ?? null;
+        source.newest = [source.newest, observedDates.at(-1)].filter(Boolean).sort().at(-1) ?? null;
+        Object.assign(source, { connected: true, cursor: page.nextCursor ?? null, exhausted: page.exhausted, seen: source.seen + page.items.length,
+          lastRefresh: refreshedAt, status: page.exhausted ? 'available source pages committed' : 'history import in progress', failedStep: null, attempts: 0 });
+      }
+      source.gaps = Array.from(new Map([...(source.gaps ?? []), ...(page.gaps ?? [])].map(gap => [hash(gap), gap])).values());
       this.store.saveSource(source);
       for (const window of monthWindows(source.from, source.to)) {
         const endComparison = window.to === source.to ? '<=' : '<';
@@ -158,7 +172,8 @@ export class ConfidantEngine {
     });
     if (outcome) return outcome;
     if (!this.store.get('firstConnectionAt')) this.store.set('firstConnectionAt', this.now());
-    return { state: 'committed', changed, excluded: excludedCount, cursor: source.cursor, exhausted: source.exhausted, fixture: this.mode === 'synthetic' };
+    return { state: 'committed', changed, excluded: excludedCount, cursor: source.cursor, exhausted: source.exhausted,
+      ...(refresh ? { refresh: true, freshness: source.freshness } : {}), fixture: this.mode === 'synthetic' };
   }
   pause(paused = true) { this.store.set('paused', paused); return { paused }; }
   retry(sourceId) { const source = this.store.source(sourceId); if (!source || source.disabled) throw new Error('Source is disabled or unknown.');
@@ -235,6 +250,7 @@ export class ConfidantEngine {
     return { mode: this.mode, readyForCustomerData: false, paused: this.store.get('paused', false), setup: this.setup().nextQuestion,
       sources: this.store.sources().map(source => ({ ...source, counts: this.store.counts(source.id), windows: this.store.windows(source.id),
         complete: source.exhausted && !source.failedStep && !source.disabled && !this.store.get('paused', false)
+          && (!source.freshness || source.freshness.completeCoverage === true)
           && !source.gaps.length && !Object.entries(this.store.counts(source.id).processing).some(([state, count]) => state !== 'classified' && count > 0)
           && !this.store.windows(source.id).some(window => ['pending', 'unknown', 'failed', 'unavailable'].includes(window.state)),
       })), privacy: 'Operator health omits raw communication content. Cloud pre-read privacy and live source coverage remain unverified.' };

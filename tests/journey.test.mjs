@@ -113,6 +113,90 @@ test('changed source data refreshes idempotently and stale model results cannot 
   assert.equal(f.store.exportBrain().records.length, before); assert.equal(before, 72);
 });
 
+test('bounded freshness updates new and changed records without consuming unfinished history', async t => {
+  const f = fixture(t); f.engine.configure(SYNTHETIC_PROFILE); f.engine.consent('messages', { approved: true });
+  await f.engine.importPage('messages', { limit: 5 }); classifyAll(f.engine);
+  const original = f.adapters.messages.readPage.bind(f.adapters.messages);
+  f.adapters.messages.readPage = async () => { throw Object.assign(new Error('Fictional history failure'), { code: 'offline' }); };
+  assert.equal((await f.engine.importPage('messages')).state, 'failed');
+  f.adapters.messages.readPage = original;
+  const before = f.store.source('messages'); const windows = f.store.windows('messages');
+  const latest = f.store.records({ source: 'messages', limit: 1 })[0];
+  const { key, fingerprint, processing, ...rawLatest } = latest;
+  const changed = { ...rawLatest, content: 'A fictional latest message was corrected, with no commitment.' };
+  const newRecord = { ...changed, id: 'new-fictional-record', timestamp: '2026-09-30T11:00:00.000Z', content: 'New fictional context only.', sourceRef: 'fixture://messages/new-fictional-record' };
+  const requests = [];
+  f.engine.now = () => '2026-09-30T12:00:00.000Z';
+  f.adapters.messages.readPage = async request => {
+    requests.push(request);
+    if (request.cursor === null && request.to !== before.to) return { items: [newRecord, changed], nextCursor: before.cursor, exhausted: false,
+      gaps: [{ code: 'fixture_partial_refresh', reason: 'More fictional records remain outside this page.' }] };
+    return original(request);
+  };
+  const result = await f.engine.importPage('messages', { refresh: true, limit: 2 });
+  const after = f.store.source('messages');
+  for (const field of ['cursor', 'from', 'to', 'exhausted', 'seen', 'oldest', 'newest', 'failedStep', 'attempts', 'status']) assert.deepEqual(after[field], before[field], field);
+  assert.equal(requests[0].cursor, null); assert.equal(requests[0].to, '2026-09-30T12:00:00.000Z');
+  assert.equal(result.changed, 2); assert.equal(result.refresh, true); assert.equal(result.freshness.pageExhausted, false);
+  assert.equal(after.freshness.completeCoverage, false); assert.equal(after.lastRefresh, f.engine.now());
+  assert.equal(f.store.record(latest.key).content, changed.content); assert.equal(f.store.record(latest.key).processing, 'pending');
+  assert.equal(f.store.record('messages:new-fictional-record').content, newRecord.content);
+  assert.equal(f.store.facts().filter(fact => fact.recordKey === latest.key).length, 0, 'Changed source text invalidates prior derived facts.');
+  assert.deepEqual(f.store.windows('messages').map(window => [window.key, window.state, window.from, window.to]),
+    windows.map(window => [window.key, window.state, window.from, window.to]));
+  assert.equal((await f.engine.importPage('messages', { refresh: true, limit: 2 })).changed, 0, 'Repeat freshness scan deduplicates stable identities.');
+  assert.equal((await f.engine.importPage('messages', { limit: 5 })).state, 'committed');
+  assert.equal(requests.at(-1).cursor, before.cursor); assert.equal(requests.at(-1).to, before.to);
+  await importAll(f.engine, 'messages'); classifyAll(f.engine);
+  assert.equal(f.store.exportBrain().records.length, 73);
+  assert.equal(f.store.source('messages').exhausted, true);
+  assert.equal(f.engine.health().sources[0].complete, false, 'Finishing/classifying old history cannot erase partial current freshness.');
+  assert.ok(f.store.source('messages').gaps.some(gap => gap.code === 'fixture_partial_refresh'));
+});
+
+test('freshness failures preserve successful receipts and history, and interruption or revocation cannot commit', async t => {
+  const f = fixture(t); f.engine.configure(SYNTHETIC_PROFILE); f.engine.consent('messages', { approved: true });
+  await f.engine.importPage('messages', { limit: 5 });
+  const original = f.adapters.messages.readPage.bind(f.adapters.messages);
+  f.engine.now = () => '2026-09-30T12:00:00.000Z';
+  await f.engine.importPage('messages', { refresh: true, limit: 5 });
+  const successful = f.store.source('messages'); const records = f.store.exportBrain().records; const windows = f.store.windows('messages');
+  await assert.rejects(f.engine.importPage('messages', { refresh: true, limit: 7, interruptBeforeCommit: true }), /interruption/);
+  assert.deepEqual(f.store.source('messages'), successful); assert.deepEqual(f.store.exportBrain().records, records);
+  assert.deepEqual(f.store.windows('messages'), windows);
+  f.engine.now = () => '2026-09-30T15:00:00.000Z';
+  f.adapters.messages.readPage = async () => { throw Object.assign(new Error('Fictional offline fixture'), { code: 'offline' }); };
+  assert.equal((await f.engine.importPage('messages', { refresh: true })).state, 'failed');
+  const failed = f.store.source('messages');
+  for (const field of ['cursor', 'from', 'to', 'exhausted', 'seen', 'oldest', 'newest', 'attempts', 'failedStep', 'lastRefresh']) assert.deepEqual(failed[field], successful[field], field);
+  for (const field of ['at', 'from', 'to', 'fetched', 'changed', 'status', 'pageExhausted']) assert.deepEqual(failed.freshness[field], successful.freshness[field], field);
+  assert.equal(failed.freshness.lastAttempt.status, 'failed'); assert.equal(failed.freshness.lastAttempt.failure.code, 'offline');
+  assert.equal(failed.freshness.lastAttempt.at, f.engine.now());
+  let release;
+  f.adapters.messages.readPage = async request => { await new Promise(resolve => { release = resolve; }); return original(request); };
+  const pending = f.engine.importPage('messages', { refresh: true, limit: 8 });
+  f.engine.disable('messages'); const revoked = f.store.source('messages'); release();
+  assert.match((await pending).state, /cancelled/); assert.deepEqual(f.store.source('messages'), revoked);
+  assert.deepEqual(f.store.exportBrain().records, records); assert.deepEqual(f.store.windows('messages'), windows);
+});
+
+test('classified freshness remains incomplete even when previous historical receipts were complete', async t => {
+  const f = fixture(t); f.engine.configure(SYNTHETIC_PROFILE); f.engine.consent('messages', { approved: true });
+  const history = f.store.source('messages');
+  const item = (id, timestamp) => ({ id, source: 'messages', timestamp, direction: 'incoming', participants: ['Alex Example'],
+    content: 'Fictional context only.', sourceRef: `fixture://messages/${id}`, metadata: { fixture: true } });
+  f.adapters.messages.readPage = async () => ({ items: [item('oldest', history.from), item('newest', history.to)], nextCursor: null, exhausted: true, gaps: [] });
+  await f.engine.importPage('messages'); classifyAll(f.engine);
+  assert.equal(f.engine.health().sources[0].complete, true, 'The fixture supplies both requested endpoints and no declared gaps.');
+  f.engine.now = () => '2026-09-30T12:00:00.000Z';
+  f.adapters.messages.readPage = async () => ({ items: [item('current', f.engine.now())], nextCursor: 'fictional-current-continuation', exhausted: false, gaps: [] });
+  await f.engine.importPage('messages', { refresh: true }); classifyAll(f.engine);
+  assert.equal(f.store.source('messages').exhausted, true); assert.equal(f.store.source('messages').to, history.to);
+  assert.deepEqual(f.store.source('messages').gaps, []);
+  assert.equal(f.store.counts('messages').processing.pending ?? 0, 0);
+  assert.equal(f.engine.health().sources[0].complete, false, 'No pending records or source gaps can erase the separately partial freshness receipt.');
+});
+
 test('invalid model facts, invented deadlines, source exclusion tightening, and reviewed corrections stay safe', async t => {
   const f = fixture(t); f.engine.configure(SYNTHETIC_PROFILE); f.engine.consent('messages', { approved: true }); await f.engine.importPage('messages', { limit: 6 });
   const batch = f.engine.nextBatch(); const good = classifySynthetic(batch);

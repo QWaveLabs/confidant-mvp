@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, readFileSync, readdirSync, statSync, existsSync, writeFileSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, readFileSync, readdirSync, statSync, existsSync, writeFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -62,6 +62,19 @@ test('two overlapping real writers retain both tasks and do not overwrite a newe
   view = await reporter.dashboard(); assert.equal(view.tasks.find(task => task.taskId === 'same-task').latestResult.runId, newest.runId);
   const oldPage = readFileSync(oldSaved.archivePath, 'utf8'); assert.ok(oldPage.includes('Older result')); assert.ok(oldPage.includes('Older own finding')); assert.ok(oldPage.includes("This timestamped run's own output"));
   assert.equal(view.totalRuns, 4);
+});
+
+test('initializing beside a locked atomic report write preserves its transient file and rejects unrelated or unsafe files', t => {
+  const { directory } = fixture(t); const lock = join(directory, '.report-lock');
+  const temporary = join(directory, 'metadata.json.11111111-1111-4111-8111-111111111111.tmp');
+  mkdirSync(lock); writeFileSync(temporary, 'Unfinished fictional atomic write');
+  assert.doesNotThrow(() => createReporter({ directory }));
+  assert.equal(readFileSync(temporary, 'utf8'), 'Unfinished fictional atomic write');
+  const unrelated = join(directory, 'unrelated.tmp'); writeFileSync(unrelated, 'Unrelated');
+  assert.throws(() => createReporter({ directory }), /Unowned/); rmSync(unrelated);
+  rmSync(lock, { recursive: true }); assert.throws(() => createReporter({ directory }), /Unowned/);
+  mkdirSync(lock); rmSync(temporary); symlinkSync(join(directory, '.report-owner.json'), temporary);
+  assert.throws(() => createReporter({ directory }), /symlinks/);
 });
 
 test('escaped long content is readable; only allowlisted safe links render, scheduler claims require verification', async t => {

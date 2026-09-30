@@ -135,7 +135,12 @@ export function createReporter({ directory, now = () => new Date().toISOString()
     if (names.length && !existsSync(owner)) throw new Error('Report directory must be empty or owned by this reporter.');
     if (existsSync(owner)) { if (json(owner).kind !== 'confidant-reporting-v1') throw new Error('Unrecognized report directory.'); }
     const allowed = new Set(['.report-owner.json', '.report-lock', 'runs', 'archives', 'latest.html', 'metadata.json']);
-    if (names.some(name => !allowed.has(name))) throw new Error('Unowned file in report directory.');
+    // Another locked writer can be between creating and renaming an atomic file.
+    // Recognize only its exact root artifact pattern; never read or remove it here.
+    const writing = existsSync(lock);
+    const transient = name => writing && /^(?:latest\.html|metadata\.json)\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.tmp$/.test(name);
+    if (names.some(name => !allowed.has(name) && !transient(name))) throw new Error('Unowned file in report directory.');
+    for (const name of names.filter(transient)) assertPath(join(root, name));
     for (const name of ['runs', 'archives', '.report-lock']) assertPath(join(root, name), 'directory');
     for (const name of ['latest.html', 'metadata.json']) assertPath(join(root, name));
   } else mkdirSync(root, { recursive: true, mode: 0o700 });

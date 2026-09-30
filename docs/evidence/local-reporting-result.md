@@ -30,3 +30,5 @@ npm run report -- config --open off
 Use `--reports <private-directory>` consistently for every task. `start` / `finish` allow multi-step scheduled results with bounded approved summaries. Existing Codex chats do not publish automatically, and no prior task prompt/cadence was modified. Any future integration requires the user's authorization. No next scheduled run is claimed without verified scheduler metadata.
 
 Final observed build passed (37 source/test/plugin files checked). The final full suite passed 63 tests, 0 failed. An earlier run on this Desktop workspace hit child-process filesystem/startup timeouts; the later complete run after the final consent/pagination fixes passed. No timeout is treated as live-source evidence.
+
+The final source-only release added a packaging utility and passed build with 38 files checked. The exact sanitized handoff package independently passed all 63 tests, 0 failures or skips, in approximately 4.3 seconds. See [publication evidence](public-preview.md).

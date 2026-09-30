@@ -23,6 +23,7 @@ export class BrainStore {
     if (existsSync(this.path)) {
       const existing = new DatabaseSync(this.path, { readOnly: true });
       try {
+        existing.exec('PRAGMA busy_timeout=5000');
         const identity = existing.prepare("SELECT value FROM meta WHERE key='storeIdentity'").get();
         if (!identity || JSON.parse(identity.value) !== this.identity) throw new Error();
       } catch { throw new Error('This is not a recognized brain for the selected mode. Refusing to modify it.'); }
@@ -34,7 +35,7 @@ export class BrainStore {
     if (resetDeleted && tombstone) rmSync(this.tombstone);
     this.db = new DatabaseSync(this.path);
     chmodSync(this.path, 0o600);
-    this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA secure_delete=ON; PRAGMA busy_timeout=5000;
+    this.db.exec(`PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA secure_delete=ON;
       CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY, state TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS records (key TEXT PRIMARY KEY, source TEXT NOT NULL, fingerprint TEXT NOT NULL, processing TEXT NOT NULL, body TEXT NOT NULL);

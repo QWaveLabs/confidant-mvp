@@ -7,7 +7,12 @@ import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const output = resolve(root, '.confidant/share/public-source-v0.2.0');
+const version = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).version;
+if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Expected a numeric source package version.');
+const stagingIndex = process.argv.indexOf('--staging-id');
+const staging = stagingIndex < 0 ? '' : process.argv[stagingIndex + 1];
+if (stagingIndex >= 0 && (typeof staging !== 'string' || !/^[a-z0-9-]{1,40}$/.test(staging))) throw new Error('Invalid source staging identifier.');
+const output = resolve(root, '.confidant/share/public-source-v' + version + (staging ? '-' + staging : ''));
 if (existsSync(output)) throw new Error('Public source staging already exists. Review it; do not silently replace it.');
 const listing = spawnSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', timeout: 60000 });
 if (listing.status !== 0) throw new Error('Tracked source inventory unavailable. No source package created.');

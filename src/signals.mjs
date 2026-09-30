@@ -17,7 +17,7 @@ export class ActionService {
       const suggestion = groups.get(identity);
       suggestion.evidence.push({ citation: fact.sourceRef, quote: fact.quote, timestamp: fact.timestamp, fingerprint: fact.fingerprint });
       suggestion.factIds.push(fact.id);
-      suggestion.fresh &&= !source.failedStep && now - Date.parse(source.lastRefresh) <= 6 * 3600000;
+      suggestion.fresh &&= !source.failedStep && source.freshness?.lastAttempt?.status !== 'failed' && now - Date.parse(source.lastRefresh) <= 6 * 3600000;
       if (source.lastRefresh < suggestion.lastRefresh) suggestion.lastRefresh = source.lastRefresh;
     }
     const feedback = this.store.rows('feedback');
@@ -39,7 +39,7 @@ export class ActionService {
     if (items.length && !this.store.get('firstUsefulBriefAt')) this.store.set('firstUsefulBriefAt', at);
     const firstConnection = this.store.get('firstConnectionAt');
     return { mode: this.engine.mode === 'synthetic' ? 'synthetic evaluation' : 'assisted local preview', at, items, summary: items.length ? 'Review these sourced actions.' : 'No defensible action found in the available classified data.',
-      coverage: this.engine.health().sources.map(source => ({ source: source.id, connected: source.connected, lastRefresh: source.lastRefresh, pending: source.counts.processing.pending ?? 0, gaps: source.gaps, complete: source.complete })),
+      coverage: this.engine.health().sources.map(source => ({ source: source.id, connected: source.connected, lastRefresh: source.lastRefresh, pending: source.counts.processing.pending ?? 0, gaps: source.gaps, freshness: source.freshness ?? null, complete: source.complete })),
       firstValueSeconds: firstConnection && this.store.get('firstUsefulBriefAt') ? (Date.parse(this.store.get('firstUsefulBriefAt')) - Date.parse(firstConnection)) / 1000 : null,
       measurementScope: this.engine.mode === 'synthetic' ? 'Synthetic fixture timing only; representative Mac first-value target is unverified.' : 'Observed local timestamps; representative pilot quality and unattended throughput remain unverified.', delivery: 'not sent' };
   }

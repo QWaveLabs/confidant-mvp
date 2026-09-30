@@ -26,3 +26,8 @@ Additional synthetic verification: [MVP child-process tests](../../../plugins/co
 
 
 Scheduled observation, 2026-09-30: native heartbeat `confidant-mvp-synthetic-scheduled-test`, trigger `2026-09-30T04:14:26.964Z`, invoked a fresh private local probe and model-classified/checkpointed six included fictional Notes records. Independent restart verification reconciled six records and six exact-quoted facts; three missing transcripts produced no facts. The temporary task is paused. [Observed scope and remaining proof](../../../docs/evidence/scheduled-task-result.md) are recorded separately. No separate platform run ID, actual user notification receipt, physical offline behavior, full interrupted 36-month model run, commercial app entitlement, plan limits or provider history proof was observed. All original live statuses and acceptance checkboxes remain blocked/unchecked.
+
+
+## Native task handoff addition, 2026-09-30
+
+The user approved a schedule-first assisted install: two daily Codex heartbeat roles and one quiet three-hour refresh, created by Codex through the native tool during customer setup. The owned native-settings helper, atomic install attempts, pause/duplicate/unknown-outcome safeguards and separate bounded freshness scans are implemented. See [task evidence](../../../docs/evidence/codex-task-install-result.md) and [scope specification](../../../docs/specs/003-codex-task-install.md). Automated source and task settings remain fictional; no new task installation or live source read was performed on Rob or Claudio. Required gates and original acceptance stay unresolved. Weekly coaching is optional within a daily review in this approved assisted flow, rather than a separate scheduled task.

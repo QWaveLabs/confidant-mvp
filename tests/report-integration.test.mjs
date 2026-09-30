@@ -48,9 +48,14 @@ test('browser adapter reads session metadata, rechecks lock/offline state, and c
   assert.equal((await createMacBrowserAdapter({ platform: 'linux', run: () => { throw new Error('Must not execute'); } }).sessionProbe()).available, false);
 });
 
-test('schedule generator proposes bounded current-plan work with fixed reporting and never creates tasks', () => {
-  const tasks = scheduleProposals({ brain: '/tmp/private-brain', reports: '/tmp/private-reports', briefTime: '08:30', timezone: 'America/New_York' });
-  assert.equal(tasks.length, 3); assert.equal(tasks[1].proposedRule, 'FREQ=DAILY;BYHOUR=8;BYMINUTE=30');
-  assert.ok(tasks.every(task => task.prompt.includes('Finish the report'))); assert.ok(tasks[0].prompt.includes('12-record batch'));
-  assert.throws(() => scheduleProposals({ brain: '/tmp/brain', reports: '/tmp/reports', briefTime: '28:30', timezone: 'UTC' }));
+test('native task bundle has two daily briefs and one quiet current-plan refresh without requiring a browser', () => {
+  const tasks = scheduleProposals({ brain: '/tmp/private-brain', briefTime: '08:30', eveningTime: '17:45', timezone: 'America/New_York' });
+  assert.deepEqual(tasks.map(task => task.taskId), ['morning-brief', 'evening-review', 'source-refresh']);
+  assert.equal(tasks[0].proposedRule, 'FREQ=DAILY;BYHOUR=8;BYMINUTE=30');
+  assert.equal(tasks[1].proposedRule, 'FREQ=DAILY;BYHOUR=17;BYMINUTE=45');
+  assert.equal(tasks[2].createArgs.notificationPolicy, 'failed_runs_only');
+  assert.equal(tasks[2].createArgs.status, 'PAUSED');
+  assert.ok(tasks.every(task => task.createArgs.kind === 'heartbeat' && !task.prompt.includes('report-cli.mjs')));
+  assert.ok(tasks[2].prompt.includes('--refresh --limit 20')); assert.ok(tasks[2].prompt.includes('12-record batch'));
+  assert.throws(() => scheduleProposals({ brain: '/tmp/brain', briefTime: '28:30', eveningTime: '17:00', timezone: 'UTC' }));
 });

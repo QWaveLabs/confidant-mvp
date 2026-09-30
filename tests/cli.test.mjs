@@ -10,7 +10,8 @@ const cli = fileURLToPath(new URL('../src/cli.mjs', import.meta.url));
 test('fresh external CLI setup pauses and resumes full 36-month fixtures, exports and deletes without creating a vault', t => {
   const directory = mkdtempSync(join(tmpdir(), 'confidant-cli-')); t.after(() => rmSync(directory, { recursive: true, force: true }));
   function run(command, args = [], ok = true) {
-    const result = spawnSync(process.execPath, ['--experimental-sqlite', cli, command, '--data', directory, ...args], { encoding: 'utf8', env: {}, timeout: 15000 });
+    const result = spawnSync(process.execPath, ['--experimental-sqlite', cli, command, '--data', directory, ...args], { encoding: 'utf8', env: {}, timeout: 45000 });
+    assert.ifError(result.error);
     assert.equal(result.status === 0, ok, result.stderr); return ok ? JSON.parse(result.stdout) : result.stderr;
   }
   const recent = run('demo'); assert.equal(recent.mode, 'synthetic-only'); assert.equal(recent.noVaultCreated, true); assert.ok(recent.firstBrief.items.length);
