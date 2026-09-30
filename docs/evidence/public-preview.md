@@ -1,0 +1,13 @@
+# Assisted preview package verification, 2026-09-30
+
+The user approved an assisted local pilot today, with gaps visible, and public source publication. The new repository is https://github.com/QWaveLabs/confidant-mvp. GitHub's authenticated repository response confirmed public visibility and the new `main` branch. The old Confidant repository was not changed.
+
+The source-only package contains all 24 original tickets, dependency map, both specs, install skill, implementation and tests. It starts a fresh public Git history with commit `2d8422f`; private development history, customer brains, run reports, probe outputs, local paths and operator identifiers were omitted or redacted. `SOURCE-HANDOFF.json` records the packaged source digest `93fe3779d1caca5d5f2ed36e2eb82bc8bbf6016489e7bf8667409507b68dc67f`. Later verification documentation is not part of that original package digest.
+
+Verification was run in the exact sanitized source package: `npm run build` passed, checking 38 source/test/plugin files and the 24-ticket inventory. `npm test` passed 63 tests, 0 failures, 0 skips, in approximately 4.3 seconds. Tests use fictional local database contracts and source/plugin records, including full setup, interrupted 36-month reconciliation and independent overlapping report writers. These observations prove code behavior under those tests, not actual customer source or scheduling coverage.
+
+The private developer dashboard was successfully saved and retains whole-system task results with per-run archives. Demonstrated content is synthetic; filesystem writes, IDs, timestamps and outcomes are actual runtime results. Its browser opening attempt was skipped. Computer-use policy blocked the local file inspection, so rendered layout, actual archive navigation and successful tab reuse remain manual checks. No bypass was attempted.
+
+This release is suitable only for the approved assisted local trial on the person's own Mac and sources they explicitly permit. Original gates 01, 04 and every provider-specific result in 05 remain unresolved. Eligible bulk plan usage, interrupted high-volume unattended processing, cloud history/privacy, notification visibility, offline-Mac behavior, representative live source schemas/permissions and first-value quality/timing remain unverified. The installer must display these gaps and stop unsupported sources rather than substitute APIs, keys or manual exports.
+
+No live customer communications, provider connection, live send, deployment, marketplace submission or lasting Obsidian vault was used in this build. Existing schedules are unchanged; the separately authorized temporary synthetic feasibility task remains paused.
