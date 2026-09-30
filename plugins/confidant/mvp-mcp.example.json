@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "confidant-synthetic-evaluation": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["--experimental-sqlite", "${PLUGIN_ROOT}/mvp-server.mjs"],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}

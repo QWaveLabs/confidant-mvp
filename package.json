@@ -1,0 +1,27 @@
+{
+  "name": "confidant-mvp",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Confidant assisted local setup and durable reporting. Live pilot release remains gated.",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --experimental-sqlite --test tests/*.test.mjs plugins/confidant/tests/*.test.mjs",
+    "status": "node src/gates.mjs",
+    "probe:run": "node scripts/probe-run.mjs",
+    "trial": "node --experimental-sqlite src/cli.mjs demo",
+    "trial:resume": "node --experimental-sqlite src/cli.mjs resume",
+    "trial:health": "node --experimental-sqlite src/cli.mjs health",
+    "trial:brief": "node --experimental-sqlite src/cli.mjs brief",
+    "trial:query": "node --experimental-sqlite src/cli.mjs query",
+    "trial:batch": "node --experimental-sqlite src/cli.mjs batch",
+    "chat:server": "node --experimental-sqlite plugins/confidant/mvp-server.mjs",
+    "report": "node --experimental-sqlite src/report-cli.mjs",
+    "report:demo": "node --experimental-sqlite src/report-cli.mjs demo",
+    "local:setup": "node --experimental-sqlite src/cli.mjs setup --assisted-local",
+    "vault:create": "node scripts/create-test-vault.mjs"
+  }
+}

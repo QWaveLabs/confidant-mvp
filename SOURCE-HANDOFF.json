@@ -1,0 +1,10 @@
+{
+  "sourceOnly": true,
+  "files": 87,
+  "bytes": 524243,
+  "redactedTechnicalDocuments": 1,
+  "includesCustomerData": false,
+  "includesPrivateGitHistory": false,
+  "contentSha256": "93fe3779d1caca5d5f2ed36e2eb82bc8bbf6016489e7bf8667409507b68dc67f",
+  "completeMvpReady": false
+}

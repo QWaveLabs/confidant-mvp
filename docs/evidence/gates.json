@@ -1,0 +1,85 @@
+{
+  "01": {
+    "status": "unverified",
+    "mode": "scheduled-synthetic-observation",
+    "consent": true,
+    "reason": "Actual native heartbeat continuation invoked a fresh private local process. User-visible notification, physical offline behavior and full host verification remain unobserved. No distinct platform run identifier was exposed.",
+    "surface": "scheduled-task",
+    "observedAt": "2026-09-30T04:15:38.138Z",
+    "reviewedByOperator": false,
+    "checks": {
+      "scheduledTaskLocalInvocation": {
+        "passed": true,
+        "artifact": "docs/evidence/scheduled-task-result.md#trigger-and-local-operation"
+      },
+      "visibleScheduledTaskNotification": {
+        "passed": false,
+        "reason": "User notification receipt/visibility not observed."
+      },
+      "offlineUnavailable": {
+        "passed": false,
+        "reason": "Physical offline Mac not tested."
+      }
+    }
+  },
+  "04": {
+    "status": "unverified",
+    "mode": "scheduled-synthetic-observation",
+    "consent": true,
+    "reason": "Scheduled chat classified and durably checkpointed six fictional records with six cited facts, without a separate API invocation. This is not eligibility, representative throughput, interrupted 36-month plan processing or usage-limit proof.",
+    "observedAt": "2026-09-30T04:17:46.264Z",
+    "reviewedByOperator": false,
+    "observations": {
+      "scheduledChatBatchCheckpoint": {
+        "passed": true,
+        "records": 6,
+        "facts": 6,
+        "artifact": "docs/evidence/scheduled-task-result.md#bounded-scheduled-chat-classification"
+      }
+    },
+    "checks": {
+      "scheduledPlanOnlyClassification": {
+        "passed": false,
+        "reason": "Small native chat workflow observed, app/customer-plan entitlement and unattended bulk path unverified."
+      },
+      "interrupted36MonthResume": {
+        "passed": false,
+        "reason": "Prior deterministic tests are separate from actual scheduled model processing."
+      },
+      "validatedCitations": {
+        "passed": true,
+        "artifact": "docs/evidence/scheduled-task-result.md#bounded-scheduled-chat-classification"
+      },
+      "visiblePlanLimits": {
+        "passed": false,
+        "reason": "No account or plan-limit measurement attempted."
+      }
+    }
+  },
+  "05": {
+    "gmail": {
+      "status": "unverified",
+      "mode": "metadata-only",
+      "consent": false,
+      "reason": "Tools visible in this coding session; no source read, Dot access or 36-month enumeration tested."
+    },
+    "outlook": {
+      "status": "unavailable",
+      "mode": "metadata-only",
+      "consent": false,
+      "reason": "No Outlook tool available in this session. This does not establish provider-wide unavailability."
+    },
+    "fathom": {
+      "status": "unverified",
+      "mode": "metadata-only",
+      "consent": false,
+      "reason": "Tools visible in this coding session; no source read, Dot access or historical enumeration tested."
+    },
+    "fireflies": {
+      "status": "unavailable",
+      "mode": "metadata-only",
+      "consent": false,
+      "reason": "No Fireflies tool available in this session. This does not establish provider-wide unavailability."
+    }
+  }
+}

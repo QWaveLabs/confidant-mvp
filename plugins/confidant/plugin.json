@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "confidant-probe",
+  "version": "0.1.0",
+  "description": "Private synthetic local status probe for the Confidant Dot feasibility gate.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Confidant Probe",
+        "shortDescription": "Check a synthetic local status value.",
+        "longDescription": "A private feasibility probe. It reads no communications and does not establish Dot, scheduling, notification, or pilot readiness.",
+        "category": "Productivity",
+        "capabilities": ["Read"],
+        "defaultPrompt": ["Check Confidant's synthetic local probe status."]
+      }
+    }
+  }
+}
